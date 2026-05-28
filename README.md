@@ -1,13 +1,18 @@
-# tab-counter
+# tab-counter-mini
 
 [![Mozilla Add-on](https://img.shields.io/amo/v/tab-counter-mini.svg?style=flat-square)](https://addons.mozilla.org/en-US/firefox/addon/tab-counter-mini/)
-[![Mozilla Add-on](https://img.shields.io/amo/d/tab-counter-mini.svg?style=flat-square)](https://addons.mozilla.org/en-US/firefox/addon/tab-counter-mini/)
+<a href="https://madebyhuman.iamjarl.com"><img src="https://madebyhuman.iamjarl.com/badges/made-white.svg" alt="Made by Human" width="120" height="40"></a>
+<!--[![Mozilla Add-on](https://img.shields.io/amo/dw/tab-counter-mini.svg?style=flat-square)](https://addons.mozilla.org/en-US/firefox/addon/tab-counter-mini/)-->
 
-A toolbar button badge that shows the number of tabs open in the current window (or across all windows, configurable). Works with both Firefox's classic horizontal tab bar and the newer vertical tabs sidebar.
+A toolbar button badge that shows the number of tabs open in the current window (or across all windows, configurable). Works with both Firefox's classic horizontal tab bar and the newer vertical tabs sidebar. 
+
+AI helped in the refactor, but it was originally developed by [DaAwesomeP](https://github.com/DaAwesomeP/tab-counter) and changes were guided by a human. The main goals were to add some sort of support for tab counts over 999 and to minimise the outdated JavaScript tooling.
 
 ## Install
 
-**[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/tab-counter-mini/)** — recommended for most users.
+**[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/tab-counter-mini/)** - recommended for most users.
+
+**Load unpacked** - download repo as zip, etc
 
 ## Badge behaviour
 
@@ -16,7 +21,6 @@ A toolbar button badge that shows the number of tabs open in the current window 
 | 0 – 999      | Exact count |
 | 1,000–9,999  | e.g. `1k`, `3.8k`, `9.9k` |
 | 10,000–999,999 | e.g. `10k`, `123k` |
-| 1,000,000+   | e.g. `1M`, `1.2M` |
 
 Hovering the toolbar button always shows the exact count in the tooltip, regardless of how many tabs are open.
 
