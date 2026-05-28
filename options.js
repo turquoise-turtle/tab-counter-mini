@@ -1,9 +1,13 @@
-/* src/options.js
+/* options.js
  * Originally created 3/11/2017 by DaAwesomeP
  * This is the options page script file
  * https://github.com/DaAwesomeP/tab-counter
  *
  * Copyright 2017-present DaAwesomeP
+ *
+ * Modified 2026: removed Opera/webextension-polyfill shim; changed var to
+ * const/let; added null guard for missing option elements; moved source to
+ * project root.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,27 +22,36 @@
  * limitations under the License.
  */
 
-var domReady = false
-var browserReady = false
-var restored = false
+// Firefox always provides the `browser` global natively in extension contexts.
+// The Opera/polyfill code path from the original has been removed since this
+// extension now targets Firefox only.
 
-async function checkBadgeColorManualSetting () {
-  let autoSelect = document.querySelector('#badgeTextColorAuto').checked
+let domReady = false
+let browserReady = false
+let restored = false
+
+function checkBadgeColorManualSetting () {
+  const autoSelect = document.querySelector('#badgeTextColorAuto').checked
   document.querySelector('#badgeTextColor').disabled = autoSelect
 }
 
 async function saveOptions () {
   checkBadgeColorManualSetting()
-  let settings = await browser.storage.local.get()
-  for (let setting in settings) {
+  const settings = await browser.storage.local.get()
+  for (const setting in settings) {
     if (setting !== 'version') {
-      let el = document.querySelector(`#${setting}`)
+      const el = document.querySelector(`#${setting}`)
+      if (!el) continue
       if (el.getAttribute('type') === 'checkbox') settings[setting] = el.checked
       else settings[setting] = el.value
-      let optionType = el.getAttribute('optionType')
-      if (optionType === 'number' && typeof settings[setting] !== 'number') settings[setting] = parseInt(settings[setting])
-      else if (optionType === 'string' && typeof settings[setting] !== 'string') settings[setting] = settings[setting].toString()
-      else if (optionType === 'boolean' && typeof settings[setting] !== 'boolean') settings[setting] = (settings[setting].toLowerCase() === 'true')
+      const optionType = el.getAttribute('optionType')
+      if (optionType === 'number' && typeof settings[setting] !== 'number') {
+        settings[setting] = parseInt(settings[setting], 10)
+      } else if (optionType === 'string' && typeof settings[setting] !== 'string') {
+        settings[setting] = settings[setting].toString()
+      } else if (optionType === 'boolean' && typeof settings[setting] !== 'boolean') {
+        settings[setting] = (settings[setting].toLowerCase() === 'true')
+      }
     }
   }
   browser.storage.local.set(settings)
@@ -47,10 +60,11 @@ async function saveOptions () {
 
 async function restoreOptions () {
   restored = true
-  let settings = await browser.storage.local.get()
-  for (let setting in settings) {
+  const settings = await browser.storage.local.get()
+  for (const setting in settings) {
     if (setting !== 'version') {
-      let el = document.querySelector(`#${setting}`)
+      const el = document.querySelector(`#${setting}`)
+      if (!el) continue
       if (el.getAttribute('type') === 'checkbox') el.checked = settings[setting]
       else el.value = settings[setting]
       el.parentElement.parentElement.style.display = 'block'
@@ -62,7 +76,7 @@ async function restoreOptions () {
 function start () {
   browserReady = true
   if (domReady && !restored) restoreOptions()
-  for (let el of document.querySelectorAll('input, select')) {
+  for (const el of document.querySelectorAll('input, select')) {
     el.addEventListener('change', saveOptions)
   }
 }
@@ -72,12 +86,4 @@ document.addEventListener('DOMContentLoaded', () => {
   if (browserReady && !restored) restoreOptions()
 })
 
-if (typeof browser === 'undefined') {
-  var script = document.createElement('script')
-  script.addEventListener('load', () => {
-    start()
-  })
-  script.src = '../node_modules/webextension-polyfill/dist/browser-polyfill.js'
-  script.async = false
-  document.head.appendChild(script)
-} else start()
+start()

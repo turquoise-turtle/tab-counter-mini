@@ -1,0 +1,55 @@
+{
+  "name": "Tab Counter",
+  "short_name": "Tab Counter",
+  "author": "turquoise-turtle",
+  "developer": {
+    "name": "turquoise-turtle",
+    "url": "https://github.com/turquoise-turtle"
+  },
+  "version": "0.5.0",
+  "description": "A button badge that shows the number of tabs open in a window",
+  "homepage_url": "https://github.com/turquoise-turtle/tab-counter-mini",
+  "manifest_version": 2,
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tab-counter@techniko.addons.mozilla.org",
+      "strict_min_version": "63.0"
+    },
+    "gecko_android": {
+      "strict_min_version": "120.0"
+    }
+  },
+  "icons": {
+    "16": "icons/tabcounter-logo-16.png",
+    "32": "icons/tabcounter-logo-32.png",
+    "64": "icons/tabcounter-logo-64.png",
+    "128": "icons/tabcounter-logo-128.png"
+  },
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "browser_action": {
+    "browser_style": true,
+    "default_area": "navbar",
+    "default_icon": "icons/tabcounter.plain.min.svg",
+    "theme_icons": [
+      {
+        "dark": "icons/tabcounter-gray10.plain.min.svg",
+        "light": "icons/tabcounter-gray90.plain.min.svg",
+        "size": 1
+      }
+    ],
+    "default_popup": "popup.html",
+    "default_title": "Tab Counter"
+  },
+  "options_ui": {
+    "page": "options.html"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": true
+  }
+}

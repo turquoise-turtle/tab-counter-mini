@@ -1,10 +1,13 @@
 <!--
- * src/popup.html
+ * popup.html
  * Originally created 3/11/2017 by DaAwesomeP
  * This is the popup markup file
  * https://github.com/DaAwesomeP/tab-counter
  *
  * Copyright 2017-present DaAwesomeP
+ *
+ * Modified 2026: updated script src path to match project root layout;
+ * removed Opera-specific references.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,36 +23,40 @@
 -->
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <style type="text/css">
-      body {
-        padding: 10px;
-      }
-      h3 {
-        width: 100%;
-        text-align: center;
-        margin: 0px;
-        border-bottom: 1px solid black;
-      }
-    </style>
-  </head>
-  <body>
-    <h3>Tab Counter</h3>
-    <table>
-      <tr>
-        <td><strong>Tabs in this window:</strong></td>
-        <td><span id="currentWindow"></span></td>
-      </tr>
-      <tr>
-        <td><strong>Tabs in all windows:</strong></td>
-        <td><span id="allTabs"></span></td>
-      </tr>
-      <tr>
-        <td><strong>Number of windows:</strong></td>
-        <td><span id="allWindows"></span></td>
-      </tr>
-    </table>
-    <script type="text/javascript" src="popup.js"></script>
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <style type="text/css">
+    body {
+      padding: 10px;
+    }
+
+    h3 {
+      width: 100%;
+      text-align: center;
+      margin: 0px;
+      border-bottom: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <h3>Tab Counter Mini</h3>
+  <table>
+    <tr>
+      <td><strong>Tabs in this window:</strong></td>
+      <td><span id="currentWindow"></span></td>
+    </tr>
+    <tr>
+      <td><strong>Tabs in all windows:</strong></td>
+      <td><span id="allTabs"></span></td>
+    </tr>
+    <tr>
+      <td><strong>Number of windows:</strong></td>
+      <td><span id="allWindows"></span></td>
+    </tr>
+  </table>
+  <script type="text/javascript" src="popup.js"></script>
+</body>
+
 </html>
