@@ -25,18 +25,6 @@
 - **`src/` build directory** — source files moved to the project root; `dist/` output directory no longer exists.
 - **`.browserslistrc`** — not needed without a transpiler.
 
-### Developer workflow
-
-Replaced Gulp with `web-ext` (Mozilla's official extension CLI):
-
-| Old command       | New command       |
-|-------------------|-------------------|
-| `npm run build`   | `npm run build`   |
-| `npm run check`   | `npm run lint`    |
-| `npm run watch`   | `npm run start`   |
-
-`npm install` now installs one dev dependency (`web-ext`) instead of ~20.
-
 ---
 
 ## [0.4.1] — 2018-10-11
