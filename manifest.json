@@ -6,7 +6,7 @@
     "name": "turquoise-turtle",
     "url": "https://github.com/turquoise-turtle"
   },
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A button badge that shows the number of tabs open in a window",
   "homepage_url": "https://github.com/turquoise-turtle/tab-counter-mini",
   "manifest_version": 2,
@@ -36,8 +36,7 @@
     "128": "icons/tabcounter-logo-128.png"
   },
   "permissions": [
-    "storage",
-    "tabs"
+    "storage"
   ],
   "browser_action": {
     "browser_style": true,
