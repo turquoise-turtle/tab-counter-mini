@@ -27,15 +27,35 @@
 <head>
   <meta charset="utf-8">
   <style type="text/css">
+    /* MV3 dropped browser_style, which is what used to give Firefox popups
+       the system font — without this the page falls back to serif. */
     body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color-scheme: light dark;
       padding: 10px;
+      min-width: 240px;
     }
 
     h3 {
       width: 100%;
       text-align: center;
-      margin: 0px;
-      border-bottom: 1px solid black;
+      margin: 0 0 8px;
+      border-bottom: 1px solid currentColor;
+      white-space: nowrap;
+    }
+
+    table {
+      width: 100%;
+    }
+
+    td {
+      white-space: nowrap;
+      padding: 2px 0;
+    }
+
+    td:last-child {
+      text-align: right;
+      padding-left: 12px;
     }
   </style>
 </head>

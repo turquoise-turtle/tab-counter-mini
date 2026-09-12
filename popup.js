@@ -22,9 +22,8 @@
  * limitations under the License.
  */
 
-// Firefox always provides the `browser` global natively in extension contexts.
-// The Opera/polyfill code path from the original has been removed since this
-// extension now targets Firefox only.
+// Both Firefox and Chrome 148+ provide the `browser` global natively in
+// extension contexts, so no polyfill is needed on either.
 
 async function start () {
   const currentWindow = (await browser.tabs.query({ currentWindow: true })).length

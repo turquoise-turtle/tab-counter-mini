@@ -59,7 +59,7 @@ function debounce(fn, delay, { leading = false } = {}) {
 /**
  * Format a tab/window count for display in the badge.
  *
- * Firefox badges fit roughly four characters. Counts above 999 are rendered
+ * Toolbar badges fit roughly four characters. Counts above 999 are rendered
  * using scaled suffixes: 1k, 1.2k, 3.8k, 1M etc. The exact count is always
  * available in the toolbar-button tooltip.
  *
@@ -107,11 +107,11 @@ const updateIcon = async function updateIcon() {
   else if (counterPreference === 4) text = formatBadgeText(allWindowsCount)
 
   // Update badge text on the toolbar button for the active tab
-  browser.browserAction.setBadgeText({ text, tabId: currentTab.id })
+  browser.action.setBadgeText({ text, tabId: currentTab.id })
 
   // Tooltip always shows exact counts so users with many tabs can read the
   // real number even though the badge shows an abbreviated value.
-  browser.browserAction.setTitle({
+  browser.action.setTitle({
     title: `Tab Counter\nTabs in this window:  ${currentWindowCount}\nTabs in all windows: ${allTabsCount}\nNumber of windows:   ${allWindowsCount}`,
     tabId: currentTab.id
   })
@@ -134,11 +134,33 @@ const lazyActivateUpdateIcon = debounce(updateIcon, 1000, { leading: true })
 const update = function update() { setTimeout(lazyUpdateIcon, 150) }
 
 // ---------------------------------------------------------------------------
+// Icon paths
+// ---------------------------------------------------------------------------
+
+// Chrome cannot rasterize SVG for action icons, so every icon "style" is
+// shipped as a pre-rendered PNG set instead. Sizes match the existing
+// icons/tabcounter-*.png assets.
+const ICON_SIZES = [16, 32, 38, 64, 96, 128]
+
+function iconPathMap(base) {
+  const map = {}
+  for (const size of ICON_SIZES) {
+    // "clear" reuses the single 1x1 transparent pixel at every size — an
+    // established trick for a badge-only, no-visible-icon style.
+    map[size] = base === 'clear' ? 'icons/clear-1.png' : `icons/${base}-${size}.png`
+  }
+  return map
+}
+
+// ---------------------------------------------------------------------------
 // Initialisation badge
 // ---------------------------------------------------------------------------
 
-browser.browserAction.setBadgeText({ text: 'wait' })
-browser.browserAction.setBadgeBackgroundColor({ color: '#000000' })
+// Neutral gray rather than black: a black badge blends into the toolbar and
+// becomes invisible in a dark browser theme, before checkSettings() applies
+// the user's actual (or default) badge color a moment later.
+browser.action.setBadgeText({ text: 'wait' })
+browser.action.setBadgeBackgroundColor({ color: '#999999' })
 
 // ---------------------------------------------------------------------------
 // Event handlers
@@ -149,11 +171,29 @@ const tabOnActivatedHandler = function tabOnActivatedHandler() {
   lazyActivateUpdateIcon()
 }
 
+// Registered unconditionally and synchronously at the top level (rather than
+// after an async settings load) so Chrome's MV3 service worker — which can be
+// evicted and re-spawned at any time — always re-attaches these listeners on
+// the very first turn of the event loop. updateIcon() already no-ops when the
+// counter is disabled, so a live listener costs one cheap storage read per
+// event instead of needing a separate attach/detach dance.
+browser.tabs.onActivated.addListener(tabOnActivatedHandler)
+browser.tabs.onAttached.addListener(update)
+browser.tabs.onCreated.addListener(update)
+browser.tabs.onDetached.addListener(update)
+browser.tabs.onMoved.addListener(update)
+browser.tabs.onReplaced.addListener(update)
+browser.tabs.onRemoved.addListener(update)
+browser.tabs.onUpdated.addListener(update)
+browser.windows.onCreated.addListener(update)
+browser.windows.onRemoved.addListener(update)
+browser.windows.onFocusChanged.addListener(update)
+
 // ---------------------------------------------------------------------------
 // Settings application
 // ---------------------------------------------------------------------------
 
-const checkSettings = async function checkSettings(settingsUpdate) {
+const checkSettings = async function checkSettings() {
   let settings = await browser.storage.local.get()
 
   // getBrowserInfo is Firefox-specific; guard for environments where it may
@@ -170,7 +210,7 @@ const checkSettings = async function checkSettings(settingsUpdate) {
   if (!Object.prototype.hasOwnProperty.call(settings, 'version')) {
     settings = {
       version: '0.0.0',
-      icon: 'tabcounter.plain.min.svg',
+      icon: 'auto',
       counter: 0,
       badgeColor: '#999999'
     }
@@ -181,7 +221,19 @@ const checkSettings = async function checkSettings(settingsUpdate) {
     const versionSplit = settings.version.split('.').map((n) => parseInt(n, 10))
 
     // v0.3.0: icons now adapt to theme; reset icon setting
-    if (versionSplit[0] === 0 && versionSplit[1] < 3) settings.icon = 'tabcounter.plain.min.svg'
+    if (versionSplit[0] === 0 && versionSplit[1] < 3) settings.icon = 'auto'
+
+    // v0.6.0: icon setting moved from an SVG filename to a base name backing
+    // a PNG size map (SVG can't be used as a Chrome action icon). The old
+    // default SVG was theme-adaptive in Firefox via context-fill, so it maps
+    // to 'auto' rather than to a static PNG, which would be a regression.
+    if (versionSplit[0] === 0 && versionSplit[1] < 6) {
+      if (Object.prototype.hasOwnProperty.call(settings, 'icon')) {
+        settings.icon = settings.icon === 'tabcounter.plain.min.svg'
+          ? 'auto'
+          : settings.icon.replace(/\.plain\.min\.svg$/, '')
+      }
+    }
 
     // v0.3.0: disable the "both" counter option (four-character badge limit)
     if (versionSplit[0] === 0 && versionSplit[1] < 3) {
@@ -207,70 +259,55 @@ const checkSettings = async function checkSettings(settingsUpdate) {
 
   // Apply badge background colour
   if (Object.prototype.hasOwnProperty.call(settings, 'badgeColor')) {
-    browser.browserAction.setBadgeBackgroundColor({ color: settings.badgeColor })
+    browser.action.setBadgeBackgroundColor({ color: settings.badgeColor })
   } else {
-    browser.browserAction.setBadgeBackgroundColor({ color: '#000000' })
+    browser.action.setBadgeBackgroundColor({ color: '#999999' })
   }
 
-  // Apply badge text colour (Firefox 63+)
+  // Apply badge text colour
   if (Object.prototype.hasOwnProperty.call(settings, 'badgeTextColor')) {
     if (settings.badgeTextColorAuto !== true) {
-      browser.browserAction.setBadgeTextColor({ color: settings.badgeTextColor })
+      browser.action.setBadgeTextColor({ color: settings.badgeTextColor })
     } else {
-      browser.browserAction.setBadgeTextColor({ color: null })
+      browser.action.setBadgeTextColor({ color: null })
     }
   }
 
-  // Apply icon
-  if (Object.prototype.hasOwnProperty.call(settings, 'icon')) {
-    browser.browserAction.setIcon({ path: `icons/${settings.icon}` })
+  // Apply icon. 'auto' hands control back to the manifest, which is what lets
+  // Firefox's theme_icons switch between the light and dark variants on its
+  // own; Chrome ignores theme_icons and keeps the manifest default_icon.
+  const iconPreference = Object.prototype.hasOwnProperty.call(settings, 'icon')
+    ? settings.icon
+    : 'auto'
+
+  if (iconPreference === 'auto') {
+    try {
+      // Firefox resets to the manifest icon on a null path.
+      await browser.action.setIcon({ path: null })
+    } catch {
+      // Chrome rejects a null path, so name the manifest default explicitly —
+      // same image, it just cannot be un-set.
+      await browser.action.setIcon({ path: iconPathMap('tabcounter') })
+    }
   } else {
-    browser.browserAction.setIcon({ path: 'icons/tabcounter.plain.min.svg' })
+    browser.action.setIcon({ path: iconPathMap(iconPreference) })
   }
 
   const counterPreference = Object.prototype.hasOwnProperty.call(settings, 'counter')
     ? settings.counter
     : 0
 
-  if (counterPreference !== 3) {
-    // Register event listeners after a delay on browser startup so we do not
-    // flood the tabs API during session restore. When triggered by a settings
-    // update (not startup) add listeners immediately.
-    setTimeout(() => {
-      browser.tabs.onActivated.addListener(tabOnActivatedHandler)
-      browser.tabs.onAttached.addListener(update)
-      browser.tabs.onCreated.addListener(update)
-      browser.tabs.onDetached.addListener(update)
-      browser.tabs.onMoved.addListener(update)
-      browser.tabs.onReplaced.addListener(update)
-      browser.tabs.onRemoved.addListener(update)
-      browser.tabs.onUpdated.addListener(update)
-      browser.windows.onCreated.addListener(update)
-      browser.windows.onRemoved.addListener(update)
-      browser.windows.onFocusChanged.addListener(update)
-    }, settingsUpdate ? 1 : 5000)
-  } else {
-    // Remove all listeners when badge is disabled
-    browser.tabs.onActivated.removeListener(tabOnActivatedHandler)
-    browser.tabs.onAttached.removeListener(update)
-    browser.tabs.onCreated.removeListener(update)
-    browser.tabs.onDetached.removeListener(update)
-    browser.tabs.onMoved.removeListener(update)
-    browser.tabs.onReplaced.removeListener(update)
-    browser.tabs.onRemoved.removeListener(update)
-    browser.tabs.onUpdated.removeListener(update)
-    browser.windows.onCreated.removeListener(update)
-    browser.windows.onRemoved.removeListener(update)
-    browser.windows.onFocusChanged.removeListener(update)
-
-    // Clear any badge text that was previously set per-tab
-    browser.browserAction.setBadgeText({ text: '' })
-    browser.browserAction.setTitle({ title: 'Tab Counter' })
+  if (counterPreference === 3) {
+    // Badge disabled: clear any badge text/title that was previously set
+    // per-tab. The tab/window listeners stay attached (see top-level
+    // registration above) — updateIcon() itself no-ops while disabled.
+    browser.action.setBadgeText({ text: '' })
+    browser.action.setTitle({ title: 'Tab Counter' })
 
     const allTabs = await browser.tabs.query({})
     allTabs.forEach((tab) => {
-      browser.browserAction.setBadgeText({ text: '', tabId: tab.id })
-      browser.browserAction.setTitle({ title: 'Tab Counter', tabId: tab.id })
+      browser.action.setBadgeText({ text: '', tabId: tab.id })
+      browser.action.setTitle({ title: 'Tab Counter', tabId: tab.id })
     })
   }
 }
@@ -279,15 +316,15 @@ const checkSettings = async function checkSettings(settingsUpdate) {
 // Startup and messaging
 // ---------------------------------------------------------------------------
 
-const applyAll = async function applyAll(settingsUpdate) {
-  await checkSettings(settingsUpdate)
+const applyAll = async function applyAll() {
+  await checkSettings()
   await update()
 }
 applyAll()
 
 const messageHandler = async function messageHandler(request) {
   if (Object.prototype.hasOwnProperty.call(request, 'updateSettings')) {
-    if (request.updateSettings) applyAll(true)
+    if (request.updateSettings) applyAll()
   }
 }
 browser.runtime.onMessage.addListener(messageHandler)

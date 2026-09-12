@@ -4,7 +4,7 @@
 <a href="https://madebyhuman.iamjarl.com"><img src="https://madebyhuman.iamjarl.com/badges/made-white.svg" alt="Made by Human" width="120" height="40"></a>
 <!--[![Mozilla Add-on](https://img.shields.io/amo/dw/tab-counter-mini.svg?style=flat-square)](https://addons.mozilla.org/en-US/firefox/addon/tab-counter-mini/)-->
 
-A toolbar button badge that shows the number of tabs open in the current window (or across all windows, configurable). Works with both Firefox's classic horizontal tab bar and the newer vertical tabs sidebar. 
+A toolbar button badge that shows the number of tabs open in the current window (or across all windows, configurable). Runs in Firefox and Chrome. Works with both Firefox's classic horizontal tab bar and the newer vertical tabs sidebar. 
 
 AI helped in the refactor, but it was originally developed by [DaAwesomeP](https://github.com/DaAwesomeP/tab-counter) and changes were guided by a human. The main goals were to add some sort of support for tab counts over 999 and to minimise the outdated JavaScript tooling.
 
@@ -12,7 +12,18 @@ AI helped in the refactor, but it was originally developed by [DaAwesomeP](https
 
 **[Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/tab-counter-mini/)** - recommended for most users.
 
-**Load unpacked** - download repo as zip, etc
+**Load unpacked** - download repo as zip, etc. For Chrome, run `uv run make_chrome_manifest.py` first (see [Chrome](#chrome) below).
+
+### Chrome
+
+`manifest.json` rests in its Firefox shape: an MV3 event page (`background.scripts`). Chrome MV3 only accepts `background.service_worker`, so convert before loading:
+
+```bash
+uv run make_chrome_manifest.py            # convert to the Chrome shape
+uv run make_chrome_manifest.py --restore  # put the Firefox original back
+```
+
+The original is saved as `manifest.json.bak` (gitignored). Chrome 148+ is required — that is the version that shipped the native promise-based `browser` namespace the extension's code uses, so no `chrome.*` rewrite or polyfill is needed.
 
 ## Badge behaviour
 
@@ -28,7 +39,8 @@ Hovering the toolbar button always shows the exact count in the tooltip, regardl
 
 ### Prerequisites
 
-- [Firefox](https://www.mozilla.org/firefox/)
+- [Firefox](https://www.mozilla.org/firefox/), and/or Chrome 148+
+- [uv](https://docs.astral.sh/uv/) — only for the Chrome manifest conversion and icon regeneration scripts
 
 ### Setup
 

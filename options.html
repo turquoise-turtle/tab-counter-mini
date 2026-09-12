@@ -29,13 +29,26 @@
     <title>Tab Counter Options</title>
     <style type="text/css">
       html {
-        font-family: sans-serif;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        color-scheme: light dark;
       }
-      tr {
-        margin-bottom: 5px;
+      body {
+        max-width: 720px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
       }
       td {
-        min-width: 400px !important;
+        padding: 6px 8px;
+        vertical-align: top;
+      }
+      td:first-child {
+        white-space: nowrap;
+      }
+      td:last-child {
+        max-width: 300px;
+        font-size: 0.9em;
       }
     </style>
   </head>
@@ -45,7 +58,7 @@
         <tr style="display: none">
           <td>Badge Color</td>
           <td><input type="color" name="badgeColor" id="badgeColor" optionType="string" /></td>
-          <td><em>Badge text color is available in Firefox 63 and above.</em></td>
+          <td><em>Badge text color requires a recent browser version.</em></td>
         </tr>
         <tr style="display: none">
           <td>Automatically set Badge Text Color</td>
@@ -61,12 +74,12 @@
           <td>Icon Color &amp; Style</td>
           <td>
             <select name="icon" id="icon" optionType="string">
-              <option value="tabcounter.plain.min.svg">Tab Counter Default</option>
-              <option value="tabcounter-gray90.plain.min.svg">Tab Counter Gray 90 (Firefox Light Theme)</option>
-              <option value="tabcounter-gray10.plain.min.svg">Tab Counter Gray 10 (Firefox Dark Theme)</option>
-              <option value="tabcounter-black.plain.min.svg">Tab Counter Black</option>
-              <option value="tabcounter-white.plain.min.svg">Tab Counter White</option>
-              <option value="clear.plain.min.svg">Clear SVG (shows badge only)</option>
+              <option value="auto">Automatic (matches browser theme in Firefox)</option>
+              <option value="tabcounter-gray90">Tab Counter Gray 90 (for light toolbars)</option>
+              <option value="tabcounter-gray10">Tab Counter Gray 10 (for dark toolbars)</option>
+              <option value="tabcounter-black">Tab Counter Black</option>
+              <option value="tabcounter-white">Tab Counter White</option>
+              <option value="clear">Clear (shows badge only)</option>
             </select>
           </td>
         </tr>
