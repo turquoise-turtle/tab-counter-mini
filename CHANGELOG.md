@@ -1,18 +1,30 @@
 # Changelog
 
+## [0.6.1] — 2026-09-13
+
+### Fixed
+
+- **Badge text colour options missing on a fresh Chrome install** — the text colour defaults were only created on Firefox, so the options page hid both rows. Automatic text colour is now worked out by the extension (black or white, whichever contrasts more with the badge), since Chrome rejects `null` and can't return to its own automatic colour once one has been set.
+
+### Changed
+
+- **Settings defaults replace per-version upgrade steps** — missing settings are filled in from a single defaults object on every start, covering fresh installs on both browsers and any settings added later. The old v0.3/v0.4/v0.6 upgrade steps and the Firefox version check were removed.
+
+- **Australian English throughout** — user-facing copy, comments and docs now use Australian spelling, and the grey icon assets were renamed `tabcounter-gray*` → `tabcounter-grey*`. Storage keys, element IDs and WebExtension API names keep their US spelling, since those are fixed by the platform.
+
 ## [0.6.0] — 2026-09-12 (Chrome support)
 
 ### Added
 
 - **Chrome support** — migrated to Manifest V3 (`browser_action` → `action`, non-persistent event-page background instead of a persistent background page) and added `make_chrome_manifest.py`, a small script that rewrites the Firefox-shaped `manifest.json` into a Chrome-compatible one (`background.scripts` → `background.service_worker`, drops Firefox-only `browser_specific_settings`, sets `minimum_chrome_version`). The extension still calls the native `browser.*` API in both browsers — no `chrome.*` rewrite or polyfill — relying on Chrome's own native promise-based `browser` namespace.
-- **`generate_icon_variants.py`** — one-off script that rasterizes the icon color-variant SVGs to PNG, since Chrome cannot use SVG for toolbar action icons.
+- **`generate_icon_variants.py`** — one-off script that rasterises the icon colour-variant SVGs to PNG, since Chrome cannot use SVG for toolbar action icons.
 
 - **Automatic icon mode** — new default "Automatic" icon style leaves the manifest in charge of the toolbar icon instead of overriding it at runtime, which is what lets Firefox's `theme_icons` switch between the light and dark variants by itself. Chrome has no manifest equivalent and keeps the default icon. Existing installs using the old default SVG (theme-adaptive via `context-fill`) migrate to this mode rather than to a static PNG.
 
 ### Fixed
 
-- **Toolbar icon not rendering in Chrome** — `default_icon` pointed at an SVG, which Chrome cannot rasterize for action icons; it now points at a PNG size map. The options page's "Icon Color & Style" picker likewise now switches between pre-rendered PNGs instead of SVGs at runtime.
-- **Initial badge invisible in dark themes** — the placeholder badge shown before settings load used a pure black background, which disappeared against a dark toolbar. Now a neutral gray.
+- **Toolbar icon not rendering in Chrome** — `default_icon` pointed at an SVG, which Chrome cannot rasterise for action icons; it now points at a PNG size map. The options page's "Icon Colour & Style" picker likewise now switches between pre-rendered PNGs instead of SVGs at runtime.
+- **Initial badge invisible in dark themes** — the placeholder badge shown before settings load used a pure black background, which disappeared against a dark toolbar. Now a neutral grey.
 - **Popup and options page layout** — the popup had no minimum width, so its title and labels wrapped onto several lines; the options page forced a 400px minimum on every table cell, making it far wider than the space Chrome gives it. Both now size sensibly.
 - **Firefox-specific wording** — options page copy no longer describes browser-neutral features as Firefox-only.
 - **Popup rendering in serif on Firefox** — MV3 dropped `browser_style`, which is what used to apply Firefox's own extension stylesheet; the popup and options page now set their own system font and declare `color-scheme: light dark` so they follow the browser theme.

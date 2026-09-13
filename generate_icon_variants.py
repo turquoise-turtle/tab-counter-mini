@@ -3,13 +3,13 @@
 # requires-python = ">=3.9"
 # dependencies = ["resvg-py"]
 # ///
-"""Rasterize the icon color-variant SVGs to PNG.
+"""Rasterise the icon colour-variant SVGs to PNG.
 
 Chrome cannot use SVG for a toolbar action icon (Firefox can). The default
 icon already ships as a PNG set (icons/tabcounter-<size>.png), generated at
 some point in the project's history from icons/tabcounter.plain.min.svg --
-but the color variants used by the options page's "Icon Color & Style"
-picker (gray10, gray90, black, white) only ever existed as SVG, since Firefox
+but the colour variants used by the options page's "Icon Colour & Style"
+picker (grey10, grey90, black, white) only ever existed as SVG, since Firefox
 never needed anything else.
 
 This is a one-off asset-generation tool, not part of the Firefox<->Chrome
@@ -30,7 +30,7 @@ import resvg_py
 
 ICON_DIR = Path("icons")
 SIZES = (16, 32, 38, 64, 96, 128)
-VARIANTS = ("tabcounter-black", "tabcounter-gray10", "tabcounter-gray90", "tabcounter-white")
+VARIANTS = ("tabcounter-black", "tabcounter-grey10", "tabcounter-grey90", "tabcounter-white")
 
 
 def main() -> None:

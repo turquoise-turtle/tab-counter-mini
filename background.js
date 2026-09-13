@@ -72,6 +72,35 @@ function formatBadgeText(n) {
   return Math.floor(n / 100000) / 10 + 'M'
 }
 
+/**
+ * Pick black or white badge text, whichever contrasts more with the badge
+ * background (WCAG relative luminance).
+ *
+ * @param {string} hex  `#rrggbb`, as produced by <input type="color">
+ * @returns {string}
+ */
+function contrastingTextColor(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+  // Above ~0.179, black gives more contrast than white
+  return luminance > 0.179 ? '#000000' : '#ffffff'
+}
+
+// ---------------------------------------------------------------------------
+// Settings defaults
+// ---------------------------------------------------------------------------
+
+const DEFAULT_SETTINGS = {
+  icon: 'auto',
+  counter: 0,
+  badgeColor: '#999999',
+  badgeTextColorAuto: true,
+  badgeTextColor: '#000000'
+}
+
 // ---------------------------------------------------------------------------
 // Core badge update
 // ---------------------------------------------------------------------------
@@ -80,8 +109,9 @@ const updateIcon = async function updateIcon() {
   // Get settings
   const settings = await browser.storage.local.get()
 
-  // Get tab counter setting (default: current-window count)
-  const counterPreference = settings.counter !== undefined ? settings.counter : 0
+  // Get tab counter setting. Listeners can fire before checkSettings() has
+  // stored the defaults on a fresh install.
+  const counterPreference = settings.counter ?? DEFAULT_SETTINGS.counter
 
   // Nothing to do if badge is disabled
   if (counterPreference === 3) return
@@ -137,7 +167,7 @@ const update = function update() { setTimeout(lazyUpdateIcon, 150) }
 // Icon paths
 // ---------------------------------------------------------------------------
 
-// Chrome cannot rasterize SVG for action icons, so every icon "style" is
+// Chrome cannot rasterise SVG for action icons, so every icon "style" is
 // shipped as a pre-rendered PNG set instead. Sizes match the existing
 // icons/tabcounter-*.png assets.
 const ICON_SIZES = [16, 32, 38, 64, 96, 128]
@@ -156,11 +186,11 @@ function iconPathMap(base) {
 // Initialisation badge
 // ---------------------------------------------------------------------------
 
-// Neutral gray rather than black: a black badge blends into the toolbar and
+// Neutral grey rather than black: a black badge blends into the toolbar and
 // becomes invisible in a dark browser theme, before checkSettings() applies
-// the user's actual (or default) badge color a moment later.
+// the user's actual (or default) badge colour a moment later.
 browser.action.setBadgeText({ text: 'wait' })
-browser.action.setBadgeBackgroundColor({ color: '#999999' })
+browser.action.setBadgeBackgroundColor({ color: DEFAULT_SETTINGS.badgeColor })
 
 // ---------------------------------------------------------------------------
 // Event handlers
@@ -194,91 +224,34 @@ browser.windows.onFocusChanged.addListener(update)
 // ---------------------------------------------------------------------------
 
 const checkSettings = async function checkSettings() {
-  let settings = await browser.storage.local.get()
+  const stored = await browser.storage.local.get()
 
-  // getBrowserInfo is Firefox-specific; guard for environments where it may
-  // not exist (e.g. automated test harnesses).
-  let browserInfo
-  if (Object.prototype.hasOwnProperty.call(browser.runtime, 'getBrowserInfo')) {
-    browserInfo = await browser.runtime.getBrowserInfo()
-  } else {
-    browserInfo = { version: '0', vendor: '', name: '' }
-  }
-  const browserVersionSplit = browserInfo.version.split('.').map((n) => parseInt(n, 10))
-
-  // First-run defaults
-  if (!Object.prototype.hasOwnProperty.call(settings, 'version')) {
-    settings = {
-      version: '0.0.0',
-      icon: 'auto',
-      counter: 0,
-      badgeColor: '#999999'
-    }
-  }
-
-  // Incremental settings migrations
-  if (settings.version !== browser.runtime.getManifest().version) {
-    const versionSplit = settings.version.split('.').map((n) => parseInt(n, 10))
-
-    // v0.3.0: icons now adapt to theme; reset icon setting
-    if (versionSplit[0] === 0 && versionSplit[1] < 3) settings.icon = 'auto'
-
-    // v0.6.0: icon setting moved from an SVG filename to a base name backing
-    // a PNG size map (SVG can't be used as a Chrome action icon). The old
-    // default SVG was theme-adaptive in Firefox via context-fill, so it maps
-    // to 'auto' rather than to a static PNG, which would be a regression.
-    if (versionSplit[0] === 0 && versionSplit[1] < 6) {
-      if (Object.prototype.hasOwnProperty.call(settings, 'icon')) {
-        settings.icon = settings.icon === 'tabcounter.plain.min.svg'
-          ? 'auto'
-          : settings.icon.replace(/\.plain\.min\.svg$/, '')
-      }
-    }
-
-    // v0.3.0: disable the "both" counter option (four-character badge limit)
-    if (versionSplit[0] === 0 && versionSplit[1] < 3) {
-      if (Object.prototype.hasOwnProperty.call(settings, 'counter')) {
-        if (settings.counter === 2) settings.counter = 0
-      }
-    }
-
-    // v0.4.0: add badgeTextColor support for Firefox 63+
-    if (
-      versionSplit[0] === 0 && versionSplit[1] < 4 &&
-      browserInfo.vendor === 'Mozilla' && browserInfo.name === 'Firefox' &&
-      browserVersionSplit[0] >= 63
-    ) {
-      settings.badgeTextColorAuto = true
-      settings.badgeTextColor = '#000000'
-    }
-  }
-
-  browser.storage.local.set(Object.assign(settings, {
+  // Missing keys are filled in from DEFAULT_SETTINGS on every start, which
+  // covers fresh installs and settings added in later versions (the options
+  // page only shows settings that exist in storage). Upgrade steps that need
+  // to transform values saved by an older version go here, keyed on
+  // stored.version (undefined on a fresh install). None needed as of 0.6.1.
+  const settings = {
+    ...DEFAULT_SETTINGS,
+    ...stored,
     version: browser.runtime.getManifest().version
-  }))
-
-  // Apply badge background colour
-  if (Object.prototype.hasOwnProperty.call(settings, 'badgeColor')) {
-    browser.action.setBadgeBackgroundColor({ color: settings.badgeColor })
-  } else {
-    browser.action.setBadgeBackgroundColor({ color: '#999999' })
   }
+  await browser.storage.local.set(settings)
 
-  // Apply badge text colour
-  if (Object.prototype.hasOwnProperty.call(settings, 'badgeTextColor')) {
-    if (settings.badgeTextColorAuto !== true) {
-      browser.action.setBadgeTextColor({ color: settings.badgeTextColor })
-    } else {
-      browser.action.setBadgeTextColor({ color: null })
-    }
-  }
+  // Apply badge colours. Automatic text colour is worked out here rather than
+  // passing null: Firefox accepts null, but Chrome rejects it and has no way
+  // to return to its own automatic colour once one has been set.
+  browser.action.setBadgeBackgroundColor({ color: settings.badgeColor })
+  browser.action.setBadgeTextColor({
+    color: settings.badgeTextColorAuto
+      ? contrastingTextColor(settings.badgeColor)
+      : settings.badgeTextColor
+  })
 
   // Apply icon. 'auto' hands control back to the manifest, which is what lets
   // Firefox's theme_icons switch between the light and dark variants on its
   // own; Chrome ignores theme_icons and keeps the manifest default_icon.
-  const iconPreference = Object.prototype.hasOwnProperty.call(settings, 'icon')
-    ? settings.icon
-    : 'auto'
+  const iconPreference = settings.icon
 
   if (iconPreference === 'auto') {
     try {
@@ -293,9 +266,7 @@ const checkSettings = async function checkSettings() {
     browser.action.setIcon({ path: iconPathMap(iconPreference) })
   }
 
-  const counterPreference = Object.prototype.hasOwnProperty.call(settings, 'counter')
-    ? settings.counter
-    : 0
+  const counterPreference = settings.counter
 
   if (counterPreference === 3) {
     // Badge disabled: clear any badge text/title that was previously set

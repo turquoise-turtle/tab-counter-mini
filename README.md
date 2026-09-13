@@ -68,9 +68,9 @@ Click the toolbar button to see a popup with current counts. Right-click → *Ma
 
 - **Counter mode** — current window, all windows, both, number of windows, or disabled
 - **Badge colour**
-- **Badge text colour** (Firefox 63+)
+- **Badge text colour**
 - **Icon style**
 
-## License
+## Licence
 
 [Apache 2.0](LICENSE)

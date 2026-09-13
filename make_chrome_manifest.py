@@ -3,10 +3,10 @@
 # requires-python = ">=3.9"
 # dependencies = []
 # ///
-"""Generate a Chrome-flavored manifest.json from the Firefox original.
+"""Generate a Chrome-flavoured manifest.json from the Firefox original.
 
 Firefox MV3 declares a background *event page* as `background.scripts: [...]`
-(an array). Chrome MV3 dropped that in favor of a single, mandatory
+(an array). Chrome MV3 dropped that in favour of a single, mandatory
 `background.service_worker` string -- there's no array form. That's the one
 piece of manifest.json Firefox and Chrome can't both read.
 
@@ -69,7 +69,7 @@ def to_chrome_manifest(data: dict) -> dict:
         data["background"] = new_background
 
     # Firefox-only (extension id, data-collection disclosure, min version).
-    # Chrome ignores unrecognized keys rather than erroring, but there's no
+    # Chrome ignores unrecognised keys rather than erroring, but there's no
     # reason to ship Firefox-specific config in the Chrome build.
     data.pop("browser_specific_settings", None)
 
